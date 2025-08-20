@@ -2,10 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
-import 'package:flutter_js/flutter_js.dart';
 import 'package:simple_live_core/simple_live_core.dart';
-import 'package:simple_live_core/src/common/js_engine.dart';
+import 'package:simple_live_core/src/common/http_client.dart' as http;
 import 'package:simple_live_core/src/common/web_socket_util.dart';
 
 import 'proto/douyin.pb.dart';
@@ -55,8 +53,8 @@ class DouyinDanmaku implements LiveDanmaku {
     var uri = Uri.parse(serverUrl).replace(scheme: "wss", queryParameters: {
       "app_name": "douyin_web",
       "version_code": DouyinRequestParams.VERSION_CODE_VALUE,
-      "webcast_sdk_version": DouyinRequestParams.SDK_VERSION,
-      "update_version_code": DouyinRequestParams.SDK_VERSION,
+      "webcast_sdk_version": "1.3.0",
+      "update_version_code": "1.3.0",
       "compress": "gzip",
       // "internal_ext":
       //     "internal_src:dim|wss_push_room_id:${danmakuArgs.roomId}|wss_push_did:${danmakuArgs.userId}|dim_log_id:20230626152702E8F63662383A350588E1|fetch_time:1687764422114|seq:1|wss_info:0-1687764422114-0-0|wrds_kvs:WebcastRoomRankMessage-1687764036509597990_InputPanelComponentSyncData-1687736682345173033_WebcastRoomStatsMessage-1687764414427812578",
@@ -209,34 +207,16 @@ class DouyinDanmaku implements LiveDanmaku {
   /// 自部署 https://github.com/SlotSun/simple_live_api
   Future<String> getSignature(String roomId, String uniqueId) async {
     try {
-      Map<String, dynamic> params = {
-        "live_id": "1",
-        "aid": "6383",
-        "version_code": DouyinRequestParams.VERSION_CODE_VALUE,
-        "webcast_sdk_version": DouyinRequestParams.SDK_VERSION,
-        "room_id": roomId,
-        "sub_room_id": "",
-        "sub_channel_id": "",
-        "did_rule": "3",
-        "user_unique_id": uniqueId,
-        "device_platform": "web",
-        "device_type": "",
-        "ac": "",
-        "identity": "audience",
-      };
-      JsEngine.init();
-      await JsEngine.loadJSFile('packages/simple_live_core/assets/js/douyin-webmssdk.js');
-      String sigParam = params.entries
-          .map((entry) => '${entry.key}=${entry.value}')
-          .join(',');
-      var md5SigParam = md5.convert(utf8.encode(sigParam)).toString();
-      JsEvalResult jsEvalResult = JsEngine.jsRuntime.evaluate("get_sign('$md5SigParam')");
-      return jsEvalResult.stringResult;
+      var signResult = await http.HttpClient.instance.postJson(
+        "https://dy.nsapps.cn/signature",
+        queryParameters: {},
+        header: {"Content-Type": "application/json"},
+        data: {"roomId": roomId, "uniqueId": uniqueId},
+      );
+      return signResult["data"]["signature"];
     } catch (e) {
       CoreLog.error(e);
       return "";
-    } finally {
-      JsEngine.dispose();
     }
   }
 }
