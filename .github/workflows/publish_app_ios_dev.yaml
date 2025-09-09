@@ -23,7 +23,7 @@ jobs:
       - name: Flutter action
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.0'
+          flutter-version: '3.32.8'
           cache: true
 
       # 设置JAVA环境
