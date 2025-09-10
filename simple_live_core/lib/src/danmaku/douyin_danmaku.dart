@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:simple_live_core/simple_live_core.dart';
+import 'package:simple_live_core/src/common/douyin/douyinRequestParams.dart';
 import 'package:simple_live_core/src/common/http_client.dart' as http;
 import 'package:simple_live_core/src/common/web_socket_util.dart';
 
@@ -90,12 +91,11 @@ class DouyinDanmaku implements LiveDanmaku {
 
     var url = "$uri&signature=$sign";
     var backupUrl = url.replaceAll("webcast3-ws-web-lq", "webcast5-ws-web-lf");
-    print(url);
     webScoketUtils = WebScoketUtils(
       url: url,
       backupUrl: backupUrl,
       headers: {
-        "User-Agnet": DouyinRequestParams.kDefaultUserAgent,
+        "User-Agent": DouyinRequestParams.kDefaultUserAgent,
         "Cookie": danmakuArgs.cookie,
         "Origin": "https://live.douyin.com"
       },
